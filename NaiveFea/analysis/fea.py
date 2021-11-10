@@ -69,13 +69,25 @@ class LinearFea(stiffness.ReducedStiffness):
         self.update_global_variables()
         self.update_show_dict()
     
-    def plot_mesh(self):
+    def plot_node_index(self,x,y):
+        for index,_ in enumerate(self.nodes):
+            plt.annotate(index,(x[index],y[index]),color="red")
+    
+    def plot_element_index(self,x,y):
+        for index,element in enumerate(self.elements):
+            x_mean=1/3*(x[element[0]]+x[element[1]]+x[element[2]])
+            y_mean=1/3*(y[element[0]]+y[element[1]]+y[element[2]])
+            plt.annotate(index,(x_mean,y_mean),xytext=(x_mean,y_mean))
+
+    def plot_mesh(self,node=True,element=False):
         x=self.show_dict['position']['x']
         y=self.show_dict['position']['y']
         mesh_fig=tri.Triangulation(x,y,self.elements)
         plt.figure()
         plt.gca().set_aspect('equal')
-        plt.triplot(mesh_fig,'b.-',lw=1)
+        plt.triplot(mesh_fig,'k.-',lw=1)
+        if node: self.plot_node_index(x,y)
+        if element: self.plot_element_index(x,y)
         plt.title('Mesh')
     
     def plot_color(self,name,component,shading):
@@ -90,9 +102,9 @@ class LinearFea(stiffness.ReducedStiffness):
         plt.colorbar()
         plt.title(f'Plot of FEA result: {name}({component})')
     
-    def plot(self,name,component=''):
+    def plot(self,name,component='',node=False,element=False):
         if name=='mesh':
-            self.plot_mesh()
+            self.plot_mesh(node,element)
         if name in ('deform','force'):
             self.plot_color(name,component,'gouraud')
         if name in ('strain','stress'):
