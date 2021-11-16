@@ -1,9 +1,9 @@
 from . import constitutive,element,analysis
-from .helper import uniform_material
+from .helper import *
 
 __all__=[ 
     'constitutive',
     'element',
     'analysis',
-    'uniform_material'
+    'plot_mesh'
 ]

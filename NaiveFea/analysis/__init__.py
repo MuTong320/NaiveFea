@@ -1,6 +1,6 @@
-from .stiffness import GlobalStiffness,ReducedStiffness
+from .linsystem import GlobalSystem,ReducedSystem
 from .fea import LinearFea
 
-__all__=['GlobalStiffness',
-'ReducedStiffness',
+__all__=['GlobalSystem',
+'ReducedSystem',
 'LinearFea']

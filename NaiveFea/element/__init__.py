@@ -1,3 +1,4 @@
-from .element import Element
+from .element import SimpleTriangleElement,TriangleElement
 
-__all__=['Element']
+__all__=['SimpleTriangleElement',
+'TriangleElement']

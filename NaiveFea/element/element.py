@@ -1,43 +1,74 @@
 import numpy as np
 
-class Element:
+class CommonElement:
     """plane triangle element"""
-    def __init__(self,material,positions):
+    def __init__(self, positions):
         """postion=ndarray([[x0,y0],[x1,y1],[x2,y2]])"""
         self.x=positions.T[0]
         self.y=positions.T[1]
-        self.node_set=np.array([0,1,2],dtype=np.uint64)
-        self.D=material.D
-        self.area_2=self.cal_area_2()
-        self.B=self.cal_B()
-        self.K_element=self.element_integrate()
+        self.node_set=np.arange(len(positions),dtype=np.uint64)
+    
+    def set_node_set(self,node_set):
+        self.node_set=node_set
 
-    def cal_area_2(self):
+class CommonTriangleElement(CommonElement):
+    """plane triangle element"""
+    def __init__(self, positions):
+        super().__init__(positions)
+        self.double_area=self.__cal_area_2()
+        self.B=self.__cal_B()
+
+    def __cal_area_2(self):
         x=self.x
         y=self.y
-        matrix=np.array([\
+        matrix=np.array([
             [1.0,x[0],y[0]], 
             [1.0,x[1],y[1]], 
             [1.0,x[2],y[2]]])
         det=np.linalg.det(matrix)
         return abs(det)
     
-    def cal_B(self):
+    def __cal_B(self):
         x=self.x
         y=self.y
-        return 1/self.area_2*np.array([\
+        return 1/self.double_area*np.array([
             [y[1]-y[2],0.0,y[2]-y[0],0.0,y[0]-y[1],0.0], 
             [0.0,x[2]-x[1],0.0,x[0]-x[2],0.0,x[1]-x[0]], 
             [x[2]-x[1],y[1]-y[2],x[0]-x[2],y[2]-y[0],x[1]-x[0],y[0]-y[1]]])
+
+class TriangleElement(CommonTriangleElement):
+    """plane triangle element for general elastic solid"""
+    def __init__(self, material, positions):
+        super().__init__(positions)
+        self.material=material
+    
+    def set_deform(self,deform_element):
+        self.deform_element=deform_element
+    
+    def forward(self):
+        self.cal_strain()
+        self.cal_stress()
+        self.cal_Jacobian()
+    
+    def cal_strain(self):
+        self.strain=self.B@self.deform_element
+
+    def cal_stress(self):
+        self.stress=self.material(self.strain)
+    
+    def cal_Jacobian(self):
+        self.element_integrate()
     
     def element_integrate(self):
-        return self.area_2*self.B.T@self.D@self.B
-    
-    def set_node_set(self,node_set):
-        self.node_set=node_set
-    
-    def get_strain(self,deform_local):
-        return self.B@deform_local
+        self.K_element=0.5*self.double_area*self.B.T@self.material.Jacobian@self.B
 
-    def get_stress(self,deform_local):
-        return self.D@self.B@deform_local
+class SimpleTriangleElement(TriangleElement):
+    """plane triangle element for linear elastic solid"""
+    def __init__(self, material, positions):
+        super().__init__(material, positions)
+        self.material=material
+        self.element_integrate()
+    
+    def element_integrate(self):
+        self.K_element=0.5*self.double_area*self.B.T@self.material.D@self.B
+        

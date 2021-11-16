@@ -1,3 +1,13 @@
-def uniform_material(mesh,material):
-        for i,_ in enumerate(mesh.cells_dict['triangle']):
-            mesh.cell_data.update({i:material})
+import matplotlib.pyplot as plt
+import matplotlib.tri as tri
+
+
+def plot_mesh(mesh):
+    x=mesh.points.T[0]
+    y=mesh.points.T[1]
+    elements=mesh.cells_dict['triangle']
+    mesh_fig=tri.Triangulation(x,y,elements)
+    plt.figure()
+    plt.gca().set_aspect('equal')
+    plt.triplot(mesh_fig,'k.-',lw=1)
+    plt.title('')
