@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 
+from naivefea import element
+
 from . import linsystem
 
 class LinearSolver(linsystem.ReducedSystem):
@@ -32,7 +34,7 @@ class LinearFeaCommand(LinearSolver):
         self.__init_deformed_dict()
 
     def __init_reference_dict(self):
-        self.reference_dict={'position':{'x':[],'y':[]},'deform':{'Ux':[],'Uy':[]}}
+        self.reference_dict={'position':{'x':[],'y':[]},'material':{'name':[],'color':[]}}
         self.reference_dict['position']['x']=self.nodes.T[0]
         self.reference_dict['position']['y']=self.nodes.T[1]
 
@@ -48,12 +50,20 @@ class LinearFeaCommand(LinearSolver):
     def uniform_material(self,material,element_set='all'):
         """assign the given material to all elements of current analysis."""
         self.check_solved()
-        if element_set=='all':
-            for i,_ in enumerate(self.elements):
-                self.meterials.update({i:material})
+        if type(element_set)==str and element_set=='all':
+            for element_index,_ in enumerate(self.elements):
+                self.__update_material(material, element_index)
         else:
-            for i,_ in element_set:
-                self.meterials.update({i:material})
+            for element_index in element_set:
+                self.__update_material(material, element_index)
+
+    def __update_material(self, material, element_index):
+        if element_index > len(self.elements): raise ValueError
+        if material not in self.materials_location.values() \
+            and material.name in self.materials.values():
+            material.name=material.name+'*'
+        self.materials_location.update({element_index:material})
+        self.materials.update({element_index:material.name})
     
     #   set boundary condition
     def set_deform_conditions(self,operation='fix',Ux=set(),Uy=set(),Uxy=set()):
@@ -270,6 +280,20 @@ class LinearFea(LinearFeaCommand):
     """
     def __init__(self, mesh):
         super().__init__(mesh)
+        self.set_figsize()
+
+    def set_figsize(self,figsize='small'):
+        """figure size can be 'small', 'medium', 'large', 'verylarge', or (length,width)."""
+        if figsize=='small':
+            self.figsize=(4,4)
+        elif figsize=='medium':
+            self.figsize=(8,8)
+        elif figsize=='large':
+            self.figsize=(12,12)
+        elif figsize=='verylarge':
+            self.figsize=(16,16)
+        else:
+            self.figsize=figsize
     
     #   plot result figures
     def plot_mesh(self,node=True,element=False,deformed=False,magnification='auto'):
@@ -282,7 +306,7 @@ class LinearFea(LinearFeaCommand):
         x=self.reference_dict['position']['x']
         y=self.reference_dict['position']['y']
         mesh_fig=tri.Triangulation(x,y,self.elements)
-        plt.figure()
+        plt.figure(figsize=self.figsize)
         plt.gca().set_aspect('equal')
         plt.triplot(mesh_fig,'k.-',lw=1)
         if node: self.__plot_node_index(x,y)
@@ -292,7 +316,7 @@ class LinearFea(LinearFeaCommand):
     def __plot_deformed_mesh(self,node=False,element=False,magnification='auto'):
         x,y,magnification=self.__amplify_deform(magnification)
         mesh_fig=tri.Triangulation(x,y,self.elements)
-        plt.figure()
+        plt.figure(figsize=self.figsize)
         plt.gca().set_aspect('equal')
         plt.triplot(mesh_fig,'k.-',lw=1)
         if node: self.__plot_node_index(x,y)
@@ -326,7 +350,7 @@ class LinearFea(LinearFeaCommand):
         x=self.reference_dict['position']['x']
         y=self.reference_dict['position']['y']
         mesh_fig=tri.Triangulation(x,y,self.elements)
-        plt.figure()
+        plt.figure(figsize=self.figsize)
         plt.gca().set_aspect('equal')
         plt.triplot(mesh_fig,'k.-',lw=1)
         if fix:
@@ -371,6 +395,20 @@ class LinearFea(LinearFeaCommand):
         max_force=max([max(map(abs,value)) for value in self.f_given.values()])
         return 0.1*max_position/max_force
     
+    def plot_material(self,node=False,element=False,deformed=False,magnification='auto'):
+        self.__init_show_material()
+        self.__plot_color('material','color','flat',deformed,magnification)
+
+    def __init_show_material(self):
+        self.reference_dict['material']={'name':[],'color':[]}
+        material_color={} #name:color
+        for name in self.materials.values():
+            self.reference_dict['material']['name'].append(name)
+            if name not in material_color:
+                material_color.update({name:len(material_color)})
+            color=material_color[name]
+            self.reference_dict['material']['color'].append(color)
+    
     def plot(self,name,component='',node=False,element=False,deformed=True,magnification='auto'):
         if name=='mesh':
             self.plot_mesh(node,element,deformed,magnification)
@@ -391,9 +429,12 @@ class LinearFea(LinearFeaCommand):
             y=self.reference_dict['position']['y']
         else:
             x,y,magnification=self.__amplify_deform(magnification)
-        z=self.current_dict[name][component]
+        if name in self.current_dict.keys():
+            z=self.current_dict[name][component]
+        if name in self.reference_dict.keys():
+            z=self.reference_dict[name][component]
         fig=tri.Triangulation(x,y,self.elements)
-        plt.figure()
+        plt.figure(figsize=self.figsize)
         plt.gca().set_aspect('equal')
         plt.tripcolor(fig,z,shading=shading)
         plt.triplot(fig,lw=1)

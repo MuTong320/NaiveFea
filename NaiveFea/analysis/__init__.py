@@ -1,6 +1,4 @@
-from .linsystem import GlobalSystem,ReducedSystem
-from .fea import LinearFea
+from .fea import LinearFea,LinearFeaCommand
 
-__all__=['GlobalSystem',
-'ReducedSystem',
-'LinearFea']
+__all__=['LinearFea',
+'LinearFeaCommand']

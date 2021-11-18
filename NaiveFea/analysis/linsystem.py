@@ -7,13 +7,13 @@ class GlobalSystem:
     def __init__(self,mesh):
         self.simplest=True
         self.autograd=True
-        self.meterials={}
+        self.materials_location={}
+        self.materials={}
         self.__get_mesh_data(mesh)
 
     def __get_mesh_data(self, mesh):
         self.nodes=mesh.points[:,:2]
         self.elements=mesh.cells_dict['triangle']
-        self.meterials=mesh.cell_data
 
     # calculation for general material
     def zero_global_variables(self):
@@ -38,7 +38,7 @@ class GlobalSystem:
         return element
     
     def __instant_Element(self,element_index):
-        material=self.meterials[element_index]
+        material=self.materials_location[element_index]
         node_set=self.elements[element_index]
         positions=np.array([self.nodes[node_set[j]][:] for j in range(3)])
         if self.simplest:
