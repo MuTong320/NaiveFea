@@ -41,5 +41,4 @@ class LinearMaterial(CommonMaterial):
 
 class OtherMaterial(CommonMaterial):
     """constitutive relationship of other material, you can define it by yourself"""
-    # recommand using PyTorch or TensorFlow to user for automatically calculate tangent stiffness
     pass
