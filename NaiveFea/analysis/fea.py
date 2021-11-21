@@ -59,11 +59,11 @@ class LinearFeaCommand(LinearSolver):
 
     def __update_material(self, material, element_index):
         if element_index > len(self.elements): raise ValueError
-        if material not in self.materials_location.values() \
-            and material.name in self.materials.values():
+        if material not in self.material_dict_location.values() \
+            and material.name in self.material_dict.values():
             material.name=material.name+'*'
-        self.materials_location.update({element_index:material})
-        self.materials.update({element_index:material.name})
+        self.material_dict_location.update({element_index:material})
+        self.material_dict.update({element_index:material.name})
     
     #   set boundary condition
     def set_deform_conditions(self,operation='fix',Ux=set(),Uy=set(),Uxy=set()):
@@ -126,7 +126,7 @@ class LinearFeaCommand(LinearSolver):
             self.y_given_displace=dict()
         if 'F' in name:
             self.f_given=dict()
-        if 'all' in name:
+        if 'all' in name or not bool(name):
             self.x_given=set()
             self.x_given_displace=dict()
             self.y_given=set()
@@ -166,7 +166,7 @@ class LinearFeaCommand(LinearSolver):
         self.__fix_global_variables()
 
     def __init_reduce_map(self):
-        self.deform_free_index=[]
+        self.deform_free_index=list()
         self.__cal_reduce_map()
         self.len_reduce=len(self.deform_free_index)
     
@@ -334,7 +334,11 @@ class LinearFea(LinearFeaCommand):
             max(abs(self.reference_dict['position']['y'])))
         max_deform=max(max(abs(self.current_dict['deform']['Ux'])),\
             max(abs(self.current_dict['deform']['Uy'])))
-        return 0.1*max_position/max_deform
+        if max_deform>1e-10*max_position:
+            magnification=0.1*max_position/max_deform
+        else:
+            magnification=0.0
+        return magnification
     
     def __plot_node_index(self,x,y):
         for index,_ in enumerate(self.nodes):
@@ -354,16 +358,16 @@ class LinearFea(LinearFeaCommand):
         plt.gca().set_aspect('equal')
         plt.triplot(mesh_fig,'k.-',lw=1)
         if fix:
-            self.__plot_x_fix()
-            self.__plot_y_fix()
+            if bool(self.x_given): self.__plot_x_fix()
+            if bool(self.y_given): self.__plot_y_fix()
         if load:
-            self.__plot_f_given()
+            if bool(self.f_given): self.__plot_f_given()
         if node: self.__plot_node_index(x,y)
         if element: self.__plot_element_index(x,y)
         plt.title('Load and Restrict')
     
     def __plot_x_fix(self):
-        x_fix_position=[]
+        x_fix_position=list()
         for node in self.x_given:
             x_fix_position.append(self.nodes[node])
         x_fix_position=np.array(x_fix_position).T
@@ -372,7 +376,7 @@ class LinearFea(LinearFeaCommand):
         plt.scatter(x,y,s=100,c='b',marker='>')
     
     def __plot_y_fix(self):
-        y_fix_position=[]
+        y_fix_position=list()
         for node in self.y_given:
             y_fix_position.append(self.nodes[node])
         y_fix_position=np.array(y_fix_position).T
@@ -397,33 +401,33 @@ class LinearFea(LinearFeaCommand):
     
     def plot_material(self,node=False,element=False,deformed=False,magnification='auto'):
         self.__init_show_material()
-        self.__plot_color('material','color','flat',deformed,magnification)
+        self.__plot_color('material','color','flat',deformed,magnification,colorbar=False)
 
     def __init_show_material(self):
         self.reference_dict['material']={'name':[],'color':[]}
-        material_color={} #name:color
-        for name in self.materials.values():
+        material_color=dict() #name:color
+        for name in self.material_dict.values():
             self.reference_dict['material']['name'].append(name)
             if name not in material_color:
                 material_color.update({name:len(material_color)})
             color=material_color[name]
             self.reference_dict['material']['color'].append(color)
     
-    def plot(self,name,component='',node=False,element=False,deformed=True,magnification='auto'):
+    def plot(self,name,component='',node=False,element=False,deformed=True,magnification='auto',colorbar=True):
         if name=='mesh':
             self.plot_mesh(node,element,deformed,magnification)
         elif name in ('deform','force'):
-            self.__plot_color(name,component,'gouraud',deformed,magnification)
+            self.__plot_color(name,component,'gouraud',deformed,magnification,colorbar)
         elif name in ('strain','stress'):
-            self.__plot_color(name,component,'flat',deformed,magnification)
+            self.__plot_color(name,component,'flat',deformed,magnification,colorbar)
         else:
             show_data=self.current_dict[name][component]
             if len(show_data)==len(self.nodes):
-                self.__plot_color(name,component,'gouraud',deformed,magnification)
+                self.__plot_color(name,component,'gouraud',deformed,magnification,colorbar)
             if len(show_data)==len(self.elements):
-                self.__plot_color(name,component,'flat',deformed,magnification)
+                self.__plot_color(name,component,'flat',deformed,magnification,colorbar)
     
-    def __plot_color(self,name,component,shading,deformed,magnification):
+    def __plot_color(self,name,component,shading,deformed,magnification,colorbar):
         if not deformed:
             x=self.reference_dict['position']['x']
             y=self.reference_dict['position']['y']
@@ -438,7 +442,7 @@ class LinearFea(LinearFeaCommand):
         plt.gca().set_aspect('equal')
         plt.tripcolor(fig,z,shading=shading)
         plt.triplot(fig,lw=1)
-        plt.colorbar()
+        if colorbar: plt.colorbar()
         title=f'{name.capitalize()} ({component})'
         if deformed:  title+=f'\n(magnification = {magnification:.2e})'
         plt.title(title)

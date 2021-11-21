@@ -6,9 +6,8 @@ class GlobalSystem:
     """built the global strain, stress, and stiffness"""
     def __init__(self,mesh):
         self.simplest=True
-        self.autograd=True
-        self.materials_location={}
-        self.materials={}
+        self.material_dict_location=dict()
+        self.material_dict=dict()
         self.__get_mesh_data(mesh)
 
     def __get_mesh_data(self, mesh):
@@ -23,12 +22,12 @@ class GlobalSystem:
         self.strain=np.zeros((self.__len_elements,3))
         self.stress=np.zeros((self.__len_elements,3))
     
-    def forward(self):
+    def forward(self,backward=True):
         for element_index,_ in enumerate(self.elements):
             element=self.__new_local_Element(element_index)
             self.__forward_element(element_index, element)
             self.__Fe2F(element)
-            if self.autograd: self.__Ke2K(element)
+            if backward: self.__Ke2K(element)
 
     def __new_local_Element(self, element_index):
         node_set=self.elements[element_index]
@@ -38,7 +37,7 @@ class GlobalSystem:
         return element
     
     def __instant_Element(self,element_index):
-        material=self.materials_location[element_index]
+        material=self.material_dict_location[element_index]
         node_set=self.elements[element_index]
         positions=np.array([self.nodes[node_set[j]][:] for j in range(3)])
         if self.simplest:
@@ -111,10 +110,12 @@ class ReducedSystem(GlobalSystem):
     def __init_reduce_variables(self):
         self.__deform_reduce=np.zeros(self.len_reduce)
         self.__force_reduce=np.zeros(self.len_reduce)
+        self.__dforce_reduce=np.zeros(self.len_reduce)
 
     def __update_force_reduce(self):
+        force=self.force-self.K@self.deform
         for i_reduce,i_global in enumerate(self.deform_free_index):
-            self.__force_reduce[i_reduce]=self.force[i_global]
+            self.__force_reduce[i_reduce]=force[i_global]
 
     def __init_reduce_stiffness(self):
         self.__K_reduce=np.zeros((self.len_reduce,self.len_reduce))
@@ -135,20 +136,19 @@ class ReducedSystem(GlobalSystem):
         self.__deform_reduce=np.linalg.solve(self.__K_reduce,self.__force_reduce)
 
     def __update_global_variables(self):
-        self.__update_global_strain()
-        self.__update_global_stress()
+        self.__update_global_deform()
+        self.__update_global_force()
 
-    def __update_global_strain(self):
+    def __update_global_deform(self):
         for i_reduce,i_global in enumerate(self.deform_free_index):
             self.deform[i_global]=self.__deform_reduce[i_reduce]
 
-    def __update_global_stress(self):
+    def __update_global_force(self):
         for i_global in self.deform_free_index:
             self.force[i_global]=self.K[i_global]@self.deform
     
     def __forward_reduce(self):
-        for i_reduce,i_global in enumerate(self.deform_free_index):
-            self.stress_reduce[i_reduce]=self.stress[i_global]
+        pass
 
     # Newton method
     def newton_iterate(self):
