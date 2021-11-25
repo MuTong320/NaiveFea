@@ -18,7 +18,7 @@ URL = 'https://github.com/MuTong320/NaiveFea'
 EMAIL = 'mutong19970320@gmail.com'
 AUTHOR = 'Tong Mu'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.1.2'
+VERSION = '0.1.2.1'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
