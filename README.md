@@ -2,7 +2,7 @@
 
 A simple python library for 2D finite element analysis.
 
-You can learn how to use it by example.ipynb and example_nonlinear.ipynb. 
+You can learn how to use it by [example.ipynb](https://github.com/MuTong320/NaiveFea/blob/master/example.ipynb) and [example_nonlinear.ipynb](https://github.com/MuTong320/NaiveFea/blob/master/example_nonlinear.ipynb).
 
 * Linear and nonlinear elasticity;
 * Easy to calculate and plot user-defined showing data;
