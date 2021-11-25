@@ -13,7 +13,9 @@ You can learn how to use it by example.ipynb and example_nonlinear.ipynb.
 
 Plot figure of mesh and restirct condition
 
-![mesh plot](https://github.com/MuTong320/NaiveFea/blob/master/figure/fig_mesh.png)     ![restrict plot](https://github.com/MuTong320/NaiveFea/blob/master/figure/fig_restrict.png)
+![mesh plot](https://github.com/MuTong320/NaiveFea/blob/master/figure/fig_mesh.png)
+
+![restrict plot](https://github.com/MuTong320/NaiveFea/blob/master/figure/fig_restrict.png)
 
 ## Solving
 
@@ -42,7 +44,7 @@ Easy to plot figures.
 
 Ability to solve multi material problem.
 
-![material plot](https://github.com/MuTong320/NaiveFea/blob/master/figure/fig_material.png)     ![e11 plot](https://github.com/MuTong320/NaiveFea/blob/master/figure/figure_e11.png)
+![e11 plot](https://github.com/MuTong320/NaiveFea/blob/master/figure/figure_e11.png)
 
 ## 
 
