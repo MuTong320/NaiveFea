@@ -1,4 +1,4 @@
-from .fea import LinearFea,LinearFeaCommand
+from .fea import LinearFea,OneStepFea
 
 __all__=['LinearFea',
-'LinearFeaCommand']
+'OneStepFea']

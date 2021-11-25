@@ -6,10 +6,13 @@ class CommonElement:
         """postion=ndarray([[x0,y0],[x1,y1],[x2,y2]])"""
         self.x=positions.T[0]
         self.y=positions.T[1]
-        self.node_set=np.arange(len(positions),dtype=np.uint64)
+        self.node_indexes=np.arange(len(positions),dtype=np.uint64)
     
-    def set_node_set(self,node_set):
-        self.node_set=node_set
+    def set_deform(self,deform_element):
+        self.deform_element=deform_element
+    
+    def set_node_indexes(self,node_indexes):
+        self.node_indexes=node_indexes
 
 class CommonTriangleElement(CommonElement):
     """plane triangle element"""
@@ -42,25 +45,28 @@ class TriangleElement(CommonTriangleElement):
         super().__init__(positions)
         self.material=material
     
-    def set_deform(self,deform_element):
-        self.deform_element=deform_element
-    
     def forward(self):
         self.cal_strain()
-        self.cal_stress()
+        self.cal_stress(autograd=True)
         self.cal_Jacobian()
+        self.cal_force()
     
     def cal_strain(self):
         self.strain=self.B@self.deform_element
 
-    def cal_stress(self):
-        self.stress=self.material(self.strain)
+    def cal_stress(self,autograd=False):
+        self.material.forward(self.strain,autograd=autograd)
+        self.stress=self.material.stress
     
     def cal_Jacobian(self):
         self.element_integrate()
     
     def element_integrate(self):
         self.K_element=0.5*self.double_area*self.B.T@self.material.Jacobian@self.B
+    
+    def cal_force(self):
+        self.force=0.5*self.double_area*self.B.T@self.stress
+
 
 class SimpleTriangleElement(TriangleElement):
     """plane triangle element for linear elastic solid"""

@@ -1,4 +1,5 @@
-from .constitutive import LinearMaterial,OtherMaterial
+from .constitutive import LinearElastic,TensorHookean,OtherMaterial
 
-__all__=['LinearMaterial',
+__all__=['LinearElastic',
+'TensorHookean',
 'OtherMaterial']

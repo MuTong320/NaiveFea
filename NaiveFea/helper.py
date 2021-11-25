@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 
@@ -11,3 +12,7 @@ def plot_mesh(mesh):
     plt.gca().set_aspect('equal')
     plt.triplot(mesh_fig,'k.-',lw=1)
     plt.title('')
+
+def cal_modulus(E='unkown',nv='unkown',K='unkown',G='unkown',lamda='unkown'):
+    """You should and can only input two of elastic properties."""
+    pass
