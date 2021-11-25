@@ -12,7 +12,7 @@ from shutil import rmtree
 from setuptools import find_packages, setup, Command
 
 # Package meta-data.
-NAME = 'NaiveFea'
+NAME = 'naivefea'
 DESCRIPTION = 'A simple python library for 2D finite element analysis.'
 URL = 'https://github.com/MuTong320/NaiveFea'
 EMAIL = 'mutong19970320@gmail.com'
@@ -22,7 +22,7 @@ VERSION = '0.1.1'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    # 'requests', 'maya', 'records',
+    'numpy', 'matplotlib', 'meshio', 
 ]
 
 # What packages are optional?
